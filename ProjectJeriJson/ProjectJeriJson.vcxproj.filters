@@ -2,5 +2,18 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="ProjectJeriJson.cpp" />
+    <ClCompile Include="JeriJson\JeriJson.cpp">
+      <Filter>JeriJson</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="JeriJson">
+      <UniqueIdentifier>{c712d83a-52a1-43bd-8183-8c7c6d9f6552}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="JeriJson\JeriJson.h">
+      <Filter>JeriJson</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

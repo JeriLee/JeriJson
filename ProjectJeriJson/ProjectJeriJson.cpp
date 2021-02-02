@@ -2,10 +2,16 @@
 //
 
 #include <iostream>
+#include "JeriJson/JeriJson.h"
 
-int main()
-{
-    std::cout << "Hello World!\n";
+using namespace std;
+
+int main() {
+  string str = "this is a string";
+  JeriJson::JObject* ptr = JeriJson::JObject::Parse(str);
+  printf("ptr = %p\n", ptr);
+  cout << "Hello CMake." << endl;
+  return 0;
 }
 
 // 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单

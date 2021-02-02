@@ -139,7 +139,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="JeriJson\JeriJson.cpp" />
     <ClCompile Include="ProjectJeriJson.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="JeriJson\JeriJson.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
