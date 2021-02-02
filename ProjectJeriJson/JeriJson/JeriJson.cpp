@@ -11,4 +11,5 @@ JeriJson::JObject::JObject() :
 
 bool JeriJson::JObject::Init(const char* s, int maxLength) {
   return false;
+
 }
