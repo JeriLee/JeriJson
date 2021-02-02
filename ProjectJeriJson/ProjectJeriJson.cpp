@@ -6,10 +6,11 @@
 
 using namespace std;
 
-int main() {
-	string str = "this is a string";
-	JeriJson::JObject* ptr = JeriJson::JObject::Parse(str);
-	printf("ptr = %p\n", ptr);
+int main()
+{
+	int x = 0;
+	TestA::Tee(x);
+	cout << x << endl;
 	cout << "Hello CMake." << endl;
 	return 0;
 }
