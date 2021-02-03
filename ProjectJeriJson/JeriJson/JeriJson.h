@@ -1,11 +1,5 @@
 #pragma once
 
-/*
-union JeriJsonValue {
-  int value;
-}
-*/
-
 #include <string>
 #include <map>
 
@@ -22,17 +16,13 @@ namespace JeriJson {
   };
   
   class JObject {
-  public:    
-    static JObject* Parse(std::string& s) {
-      return Parse(s.c_str(), s.length());
-    }
-
-    static JObject* Parse(const char* s, int maxLength) {
-      JObject* object = new JObject();
-      bool result = object->Init(s, maxLength);
-      return result ? object : nullptr;
-    }
+  public:
+    static JObject* Parse(std::string& s);
+    static JObject* Parse(const char* s, int maxLength);
     
+    JObject* Get(std::string& s);
+    JObject* Get(const char* s, int maxLength);
+
   private:
     bool Init(const char* s, int maxLength);
     JObject();
@@ -44,6 +34,6 @@ namespace JeriJson {
     double valueDouble;
     bool valueBool;
     char* valueString;
-    std::map<std::string, JObject> childs;
+    std::map<std::string, JObject*> childs;
   };
 }
