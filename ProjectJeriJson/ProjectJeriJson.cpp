@@ -7,7 +7,10 @@
 using namespace std;
 
 int main() {
-  string str = "this is a string";
+  string str = "this is a stringaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbba";
+  printf("size is %d\n", (int)(sizeof(str)));
+  printf("size is %d\n", (int)str.length() + 1);
+
   JeriJson::JObject* ptr = JeriJson::JObject::Parse(str);
   printf("ptr = %p\n", ptr);
   cout << "Hello CMake." << endl;
