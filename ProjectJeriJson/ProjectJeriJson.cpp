@@ -7,6 +7,10 @@
 using namespace std;
 
 int main() {
+
+  char c1 = ':';
+  char c2 = '\:';
+  printf("char = %d %d\n", c1, c2);
   string str = "this is a stringaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbba";
   printf("size is %d\n", (int)(sizeof(str)));
   printf("size is %d\n", (int)str.length() + 1);
