@@ -8,12 +8,13 @@ namespace JeriJson {
   
   enum class JsonValueType {
     ValueNull,
-    ValueInt32,
+    //ValueInt32,
     ValueInt64,
-    ValueDouble,
-    ValueBool,
+    //ValueDouble,
+    //ValueBool,
     ValueString,
     ValueJson,
+    ValueArray,
   };
   
   class JObject {

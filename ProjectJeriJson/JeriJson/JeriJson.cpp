@@ -143,11 +143,8 @@ namespace JeriJson {
     return true;
   }
 
+  //[iter, iterEnd) FindValueRange
   bool JObject::FindNextValueRange(stritr& iter, const stritr& iterEnd, stritr& valueBegin, stritr& valueEnd) {
-    int allCount = 0;
-    int quotationCount = 0;
-    int trimCount = 0;
-
     if (TrimLeft(iter, iterEnd)) return false;
     // ""
     if (IsQuotationChar(*iter)) {
