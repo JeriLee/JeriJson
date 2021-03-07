@@ -75,36 +75,17 @@ namespace JeriJson {
   }
 
   bool JObject::FindBraceOrBracketPair(const stritr& iterBegin, const stritr& iterEnd, stritr& iterFind) {
-    iterFind = iterBegin;
-    std::stack<bool> beginStack;
-    beginStack.push(IsBraceChar(*iterFind++));
-    stritr temp;
+    int count = 0;
+
+    char leftChar = *iterBegin;
+    char endChar = leftChar == '{' ? '}' : ']';
 
     while (iterFind < iterEnd) {
-      switch (*iterFind) {
-      case '"':
-        if (!FindNextIterSkipEscapesChar(iterFind, iterEnd, isQuotationFunc, temp)) return false;
-        break;
-      case '{':
-        beginStack.push(true);
-        break;
-      case '[':
-        beginStack.push(false);
-        break;
-      case ']':
-        if (beginStack.empty() || beginStack.top()) return false;
-        beginStack.pop();
-        if (beginStack.empty()) return true;
-        break;
-      case '}':
-        if (beginStack.empty() || !beginStack.top()) return false;
-        beginStack.pop();
-        if (beginStack.empty()) return true;
-        break;
-      default:
-        break;
+      count += (*iterFind == leftChar);
+      count -= (*iterFind == endChar);
+      if (count == 0) {
+        return true;
       }
-      ++iterFind;
     }
     return false;
   }
@@ -146,22 +127,24 @@ namespace JeriJson {
   //[iter, iterEnd) FindValueRange
   bool JObject::FindNextValueRange(stritr& iter, const stritr& iterEnd, stritr& valueBegin, stritr& valueEnd) {
     if (!TrimLeft(iter, iterEnd)) return false;
+
     // ""
     if (IsQuotationChar(*iter)) {
       valueBegin = iter;
-      if (FindNextIterSkipEscapesChar(iter, iterEnd, isQuotationFunc, valueEnd)) return false;
-      valueEnd = valueEnd;
-      return true;
+      return FindNextIterSkipEscapesChar(iter, iterEnd, isQuotationFunc, valueEnd);
     }
+
     // 1234
     if (IsNumber(*iter)) {
-      //FindNumberEnd(iter, iterEnd, );
+      valueBegin = iter;
+      FindNumberEnd(iter, iterEnd, valueEnd);
+      iter = valueEnd;
     }
+
     //{ }  [ ]
     if (IsBraceChar(*iter) || IsBracket(*iter)) {
-      if (!FindBraceOrBracketPair(iter, iterEnd, valueEnd)) return false;
       valueBegin = iter;
-      return true;
+      return FindBraceOrBracketPair(iter, iterEnd, valueEnd);
     }
     return false;
   }
@@ -170,7 +153,7 @@ namespace JeriJson {
     return Trim(iter, iterEnd, IsSpaceChar);
   }
 
-  bool JObject::Trim(stritr& iter, stritr& iterEnd, std::function<bool(char)> trimChar) {
+  bool JObject::Trim(stritr& iter, stritr& iterEnd, std::function<bool(char)>&& trimChar) {
     while (iter < iterEnd && trimChar(*iter)) {
       ++iter;
     }
@@ -225,8 +208,10 @@ namespace JeriJson {
       SetStr(iter + 1, iterEnd - 1);
     } else if (IsNumber(firstChar)) {
       SetInt(iter, iterEnd);
-    } else {
+    } else if(firstChar == '['){
       //TO DO
+      return false;
+    } else {
       return false;
     }
     return true;
@@ -246,44 +231,20 @@ namespace JeriJson {
     auto type = StatusType::Default;
     stritr keyBegin, keyEnd;
     stritr valueBegin, valueEnd;
-    ///std::function<bool(char)> yinhao2 = std::function<bool(char)>([](char c)->bool { return c == '\"'; });
+
     while (true) {
-      if (FindNextKeyRange(iter, iterEnd, keyBegin, keyEnd)) return false;
-      if (FindNextColon(iter, iterEnd)) return false;
-      if (FindNextValueRange(iter, iterEnd, valueBegin, valueEnd)) return false;
-    }
+      if (!FindNextKeyRange(iter, iterEnd, keyBegin, keyEnd)) return false;
+      if (!FindNextColon(iter, iterEnd)) return false;
+      if (!FindNextValueRange(iter, iterEnd, valueBegin, valueEnd)) return false;
 
-    while (iter < iterEnd) {
-      char c = *iter;
-      if (c == '"') {
-        switch (type) {
-        case StatusType::Default:
-        case StatusType::KvpSplit:
-          type = StatusType::KeyHalf;
-          keyBegin = iter;
-          break;
-        case StatusType::KeyHalf:
-          type = StatusType::KeyOver;
-          keyEnd = iter;
-          break;
-        case StatusType::KeyOver:
-          type = StatusType::ValueHalf;
-          valueBegin = iter;
-          break;
-        case StatusType::ValueHalf:
-          type = StatusType::ValueOver;
-          valueEnd = iter;
-          break;
-        case StatusType::ValueOver:
-          //==
-          break;
-        }
-      } else if (c == '\\') {
-        ++iter;
-      } else {
-
+      JObject* value = new JObject();
+      if (!(value->InitValue(valueBegin, valueEnd))) return false;
+      childs.emplace(std::string(keyBegin, keyEnd), value);
+      stritr _;
+      bool result = FindNextIterSkipSpace(iter, iterEnd, [](char c)->bool { return c == ','; }, _);
+      if (!result) {
+        //if()
       }
-      ++iter;
     }
   }
   //std::function<bool(char)> JObject::isQuotationFunc = [](char c)->bool { return c == '\"'; };

@@ -53,7 +53,7 @@ namespace JeriJson {
     
     static bool TrimLeft(stritr& iterBegin, const stritr& iterEnd);
     static bool Trim(stritr& iter, stritr& iterEnd);
-    static bool Trim(stritr& iter, stritr& iterEnd, std::function<bool(char)> trimChar);
+    static bool Trim(stritr& iter, stritr& iterEnd, std::function<bool(char)>&& trimChar);
     static bool GetValue(stritr iter, stritr iterEnd, int64_t& value);
 
     static bool FindNextIterSkipSpace(stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind);
