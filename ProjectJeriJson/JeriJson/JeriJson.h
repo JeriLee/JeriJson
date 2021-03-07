@@ -35,9 +35,20 @@ namespace JeriJson {
     template<typename K, typename V>
     using stdmap = typename std::map<K, V>;
 
+    class Childs {
+    public:
+      Childs() {
+
+      }
+    private:
+
+      stdmap<stdstr, JObject*> elements;
+
+    };
+
     /// @brief Constructor, but Json is not initialized
     JObject();
-
+    ~JObject();
     /// @brief Init Json {"key", "value"}
     /// @param iter , string.begin()
     /// @param iterEnd , string.end()
@@ -48,7 +59,7 @@ namespace JeriJson {
     void UnInitValue();
     void SetInt(int64_t value);
     void SetStr(stritr iter, stritr iterEnd);
-    void SetInt(stritr iter, stritr iterEnd);
+    bool SetInt(stritr iter, stritr iterEnd);
     bool SplitKeyValues(stritr iter, stritr iterEnd);
     
     static bool TrimLeft(stritr& iterBegin, const stritr& iterEnd);
@@ -57,7 +68,7 @@ namespace JeriJson {
     static bool GetValue(stritr iter, stritr iterEnd, int64_t& value);
 
     static bool FindNextIterSkipSpace(stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind);
-    static bool FindNextIterSkipEscapesChar(stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind);
+    static bool FindNextIterSkipEscapesChar(const stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind);
     static bool FindBraceOrBracketPair(const stritr& iterBegin, const stritr& iterEnd, stritr& iterFind);
     static void FindNumberEnd(const stritr& iterBegin, const stritr& iterEnd, stritr& iterFind);
 
