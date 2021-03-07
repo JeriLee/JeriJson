@@ -67,7 +67,7 @@ namespace JeriJson {
         return true;
       }
       if (IsEscapesChar(*iter)) {
-        if (++iter == iterEnd) return false;
+        ++iter;
       }
       ++iter;
     }
@@ -145,7 +145,7 @@ namespace JeriJson {
 
   //[iter, iterEnd) FindValueRange
   bool JObject::FindNextValueRange(stritr& iter, const stritr& iterEnd, stritr& valueBegin, stritr& valueEnd) {
-    if (TrimLeft(iter, iterEnd)) return false;
+    if (!TrimLeft(iter, iterEnd)) return false;
     // ""
     if (IsQuotationChar(*iter)) {
       valueBegin = iter;
@@ -246,7 +246,7 @@ namespace JeriJson {
     auto type = StatusType::Default;
     stritr keyBegin, keyEnd;
     stritr valueBegin, valueEnd;
-    std::function<bool(char)> yinhao2 = std::function<bool(char)>([](char c)->bool { return c == '\"'; });
+    ///std::function<bool(char)> yinhao2 = std::function<bool(char)>([](char c)->bool { return c == '\"'; });
     while (true) {
       if (FindNextKeyRange(iter, iterEnd, keyBegin, keyEnd)) return false;
       if (FindNextColon(iter, iterEnd)) return false;
