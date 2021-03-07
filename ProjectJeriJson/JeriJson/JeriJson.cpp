@@ -23,7 +23,7 @@ namespace JeriJson {
 
   void JObject::SetInt(int64_t value) {
     UnInitValue();
-    valueType = JsonValueType::ValueInt32;
+    valueType = JsonValueType::ValueInt64;
     valueLL = value;
   }
 
@@ -155,7 +155,7 @@ namespace JeriJson {
     }
     // 1234
     if (IsNumber(*iter)) {
-      FindNumberEnd(iter, iterEnd, );
+      //FindNumberEnd(iter, iterEnd, );
     }
     //{ }  [ ]
     if (IsBraceChar(*iter) || IsBracket(*iter)) {
@@ -167,13 +167,14 @@ namespace JeriJson {
   }
 
   bool JObject::Trim(stritr& iter, stritr& iterEnd) {
-    while (iter < iterEnd && IsSpaceChar(*iter)) {
+    return Trim(iter, iterEnd, IsSpaceChar);
+  }
+
+  bool JObject::Trim(stritr& iter, stritr& iterEnd, std::function<bool(char)> trimChar) {
+    while (iter < iterEnd && trimChar(*iter)) {
       ++iter;
     }
-
-    if (iter >= iterEnd) return false;
-
-    while (IsSpaceChar(*(iterEnd - 1))) {
+    while (iter < iterEnd && trimChar(*(iterEnd - 1))) {
       --iterEnd;
     }
     return iter < iterEnd;
@@ -201,7 +202,6 @@ namespace JeriJson {
     valueType = JsonValueType::ValueNull;
   }
 
-  // Init j_son Value
   bool JObject::InitValue(stritr iter, stritr iterEnd) {
     if (!Trim(iter, iterEnd)) {
       return false;
