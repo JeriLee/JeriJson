@@ -1,171 +1,44 @@
-#include "JeriJson.h"
+﻿#include "JeriJson.h"
 #include <stack>
 
 namespace JeriJson {
-  JObject* JObject::Parse(std::string& s) {
-    JObject* object = new JObject();
-    bool result = object->InitValue(s.begin(), s.end());
-    if (!result) {
-      delete object;
-      object = nullptr;
-    }
-    return object;
+  inline bool IsSpaceChar(char c) {
+    return c == 32;
   }
 
-  JObject* JObject::Get(std::string& s) {
-    auto iter = childs.find(s);
-    return iter != childs.end() ? iter->second : nullptr;
+  inline bool IsNumber(char c) {
+    return c >= '0' && c <= '9';
   }
 
-  JObject::JObject() :
-    valueType(JsonValueType::ValueNull),
-    valueLL(0L),
-    valueDouble(0.0),
-    valueBool(false),
-    valueString(std::string()) {
+  inline bool IsQuotationChar(char c) {
+    return c == '"';
   }
 
-  JObject::~JObject() {
-    for (auto object : childs) {
-      delete object.second;
-    }
+  inline bool IsEscapesChar(char c) {
+    return c == '\\';
   }
 
-  void JObject::SetInt(int64_t value) {
-    UnInitValue();
-    valueType = JsonValueType::ValueInt64;
-    valueLL = value;
+  inline bool IsColonChar(char c) {
+    return c == ':';
   }
 
-  void JObject::SetStr(stritr iter, stritr iterEnd) {
-    UnInitValue();
-    valueType = JsonValueType::ValueString;
-    valueString = std::string(iter, iterEnd);
+  inline bool IsBraceLChar(char c) {
+    return c == '{';
   }
 
-  //TO DO
-  bool JObject::SetInt(stritr iter, stritr iterEnd) {
-    int64_t value;
-    bool result = GetValue(iter, iterEnd, value);
-    if (result) SetInt(value);
-    return result;
+  inline bool IsBraceRChar(char c) {
+    return c == '}';
   }
 
-  //TO DO
-  bool JObject::GetValue(stritr iter, stritr iterEnd, int64_t& value) {
-    value = 0;
-    while (iter < iterEnd) {
-      value = value * 10 + *iter++ - '0';
-    }
-    return true;
+  inline bool IsBracketLChar(char c) {
+    return c == '[';
   }
 
-  bool JObject::FindNextIterSkipSpace(stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind) {
-    while (iter < iterEnd) {
-      if (match(*iter)) {
-        iterFind = iter++;
-        return true;
-      }
-      if (!IsSpaceChar(*iter)) return false;
-      ++iter;
-    }
-    return false;
+  inline bool IsBracketRChar(char c) {
+    return c == ']';
   }
 
-  bool JObject::FindNextIterSkipEscapesChar(const stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind) {
-    iterFind = iter;
-    while (iterFind < iterEnd) {
-      if (match(*iterFind)) {
-        return true;
-      }
-      if (IsEscapesChar(*iterFind)) {
-        ++iterFind;
-      }
-      ++iterFind;
-    }
-    return false;
-  }
-
-  bool JObject::FindBraceOrBracketPair(const stritr& iterBegin, const stritr& iterEnd, stritr& iterFind) {
-    int count = 0;
-
-    char leftChar = *iterBegin;
-    char endChar = leftChar == '{' ? '}' : ']';
-
-    while (iterFind < iterEnd) {
-      count += (*iterFind == leftChar);
-      count -= (*iterFind == endChar);
-      if (count == 0) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  void JObject::FindNumberEnd(const stritr& iterBegin, const stritr& iterEnd, stritr& iterFind) {
-    iterFind = iterBegin;
-    while (iterFind < iterEnd && IsNumber(*iterFind)) {
-      ++iterFind;
-    }
-  }
-
-  bool JObject::FindNextKeyBegin(stritr& iter, const stritr& iterEnd, stritr& keyBegin) {
-    return FindNextIterSkipSpace(iter, iterEnd, isQuotationFunc, keyBegin);
-  }
-
-  bool JObject::FindNextKeyEnd(stritr& iter, const stritr& iterEnd, stritr& keyEnd) {
-    return FindNextIterSkipEscapesChar(iter, iterEnd, isQuotationFunc, keyEnd);
-  }
-
-  bool JObject::FindNextColon(stritr& iter, const stritr& iterEnd) {
-    stritr iterFind;
-    return FindNextIterSkipSpace(iter, iterEnd, isColonFunc, iterFind);
-  }
-
-  bool JObject::FindNextValueBegin(stritr& iter, const stritr& iterEnd, stritr& valueBegin) {
-    return FindNextIterSkipSpace(iter, iterEnd, isQuotationFunc, valueBegin);
-  }
-
-  bool JObject::FindNextValueEnd(stritr& iter, const stritr& iterEnd, stritr& valueEnd) {
-    return false;
-  }
-
-  bool JObject::FindNextKeyRange(stritr& iter, const stritr& iterEnd, stritr& keyBegin, stritr& keyEnd) {
-    if (!FindNextKeyBegin(iter, iterEnd, keyBegin)) return false;
-    if (!FindNextKeyEnd(iter, iterEnd, keyEnd)) return false;
-    return true;
-  }
-
-  //[iter, iterEnd) FindValueRange
-  bool JObject::FindNextValueRange(stritr& iter, const stritr& iterEnd, stritr& valueBegin, stritr& valueEnd) {
-    if (!TrimLeft(iter, iterEnd)) return false;
-
-    // ""
-    if (IsQuotationChar(*iter)) {
-      valueBegin = iter;
-      return FindNextIterSkipEscapesChar(iter, iterEnd, isQuotationFunc, valueEnd);
-    }
-
-    // 1234
-    if (IsNumber(*iter)) {
-      valueBegin = iter;
-      FindNumberEnd(iter, iterEnd, valueEnd);
-      iter = valueEnd;
-    }
-
-    //{ }  [ ]
-    if (IsBraceChar(*iter) || IsBracket(*iter)) {
-      valueBegin = iter;
-      return FindBraceOrBracketPair(iter, iterEnd, valueEnd);
-    }
-    return false;
-  }
-
-  bool JObject::Trim(stritr& iter, stritr& iterEnd) {
-    return Trim(iter, iterEnd, IsSpaceChar);
-  }
-
-  bool JObject::Trim(stritr& iter, stritr& iterEnd, std::function<bool(char)>&& trimChar) {
+  bool Trim(JObject::StrItr& iter, JObject::StrItr& iterEnd, std::function<bool(char)>&& trimChar) {
     while (iter < iterEnd && trimChar(*iter)) {
       ++iter;
     }
@@ -175,7 +48,11 @@ namespace JeriJson {
     return iter < iterEnd;
   }
 
-  bool JObject::TrimLeft(stritr& iter, const stritr& iterEnd) {
+  bool Trim(JObject::StrItr& iter, JObject::StrItr& iterEnd) {
+    return Trim(iter, iterEnd, IsSpaceChar);
+  }
+
+  bool TrimLeft(JObject::StrItr& iter, const JObject::StrItr& iterEnd) {
     while (iter < iterEnd) {
       if (!IsSpaceChar(*iter)) return true;
       ++iter;
@@ -183,6 +60,182 @@ namespace JeriJson {
     return false;
   }
 
+  bool FindNextIterSkipSpace(const JObject::StrItr& iter, const JObject::StrItr& iterEnd, const std::function<bool(char)>& match, JObject::StrItr& iterFind) {
+    iterFind = iter;
+    while (iterFind < iterEnd) {
+      if (match(*iter)) return true;
+      if (!IsSpaceChar(*iter)) return false;
+      ++iterFind;
+    }
+    return false;
+  }
+
+  void FindNumberEnd(const JObject::StrItr& iterBegin, const JObject::StrItr& iterEnd, JObject::StrItr& iterFind) {
+    iterFind = iterBegin;
+    while (iterFind < iterEnd && IsNumber(*iterFind)) {
+      ++iterFind;
+    }
+  }
+
+  bool FindNextIterSkipEscapesChar(const JObject::StrItr& iter, const JObject::StrItr& iterEnd, const std::function<bool(char)>& match, JObject::StrItr& iterFind) {
+    iterFind = iter;
+    while (iterFind < iterEnd) {
+      if (match(*iterFind)) return true;
+      if (IsEscapesChar(*iterFind)) ++iterFind;
+      ++iterFind;
+    }
+    return false;
+  }
+
+  bool FindBraceOrBracketPair(const JObject::StrItr& iterBegin, const JObject::StrItr& iterEnd, JObject::StrItr& iterFind) {
+    int count = 0;
+    std::function<bool(char)> matchL = IsBraceLChar(*iterBegin) ? IsBraceLChar : IsBracketLChar;
+    std::function<bool(char)> matchR = IsBraceLChar(*iterBegin) ? IsBraceRChar : IsBracketRChar;
+    iterFind = iterBegin;
+    while (iterFind < iterEnd) {
+      count += matchL(*iterFind);
+      count -= matchR(*iterFind);
+      if (count == 0) return true;
+    }
+    return false;
+  }
+
+  inline bool FindNextKeyBegin(const JObject::StrItr& iter, const JObject::StrItr& iterEnd, JObject::StrItr& keyBegin) {
+    return FindNextIterSkipSpace(iter, iterEnd, IsQuotationChar, keyBegin);
+  }
+
+  inline bool FindNextKeyEnd(const JObject::StrItr& iter, const JObject::StrItr& iterEnd, JObject::StrItr& keyEnd) {
+    return FindNextIterSkipEscapesChar(iter, iterEnd, IsQuotationChar, keyEnd);
+  }
+
+  inline bool FindNextColon(const JObject::StrItr& iter, const JObject::StrItr& iterEnd, JObject::StrItr& iterFind) {
+    return FindNextIterSkipSpace(iter, iterEnd, IsColonChar, iterFind);
+  }
+
+  inline bool FindNextKeyRange(const JObject::StrItr& iter, const JObject::StrItr& iterEnd, JObject::StrItr& keyBegin, JObject::StrItr& keyEnd) {
+    if (!FindNextKeyBegin(iter, iterEnd, keyBegin)) return false;
+    if (!FindNextKeyEnd(keyBegin + 1, iterEnd, keyEnd)) return false;
+    return true;
+  }
+
+  bool FindNextValueRange(const JObject::StrItr& iterBegin, const JObject::StrItr& iterEnd, JObject::StrItr& valueBegin, JObject::StrItr& valueEnd) {
+    JObject::StrItr iter = iterBegin;
+    if (!TrimLeft(iter, iterEnd)) return false;
+
+    if (IsQuotationChar(*iter)) {
+      if (!FindNextIterSkipEscapesChar(iter, iterEnd, IsQuotationChar, valueEnd)) return false;
+      valueBegin = iter;
+      return true;
+    }
+
+    if (IsNumber(*iter)) {
+      FindNumberEnd(iter, iterEnd, valueEnd);
+      valueBegin = iter;
+      return true;
+    }
+
+    if (IsBraceLChar(*iter) || IsBracketLChar(*iter)) {
+      if (!FindBraceOrBracketPair(iter, iterEnd, valueEnd)) return false;
+      valueBegin = iter;
+      return true;
+    }
+    return false;
+  }
+
+
+
+  //=================
+  JObject::Childs::~Childs() {
+    for (const auto& iter : keyToValue_) {
+      delete iter.second;
+    }
+  }
+
+  void JObject::Childs::Add(const stdstr& key, JObject* value) {
+    auto iter = keyToValue_.find(key);
+    if (iter != keyToValue_.end()) {
+      delete iter->second;
+    }
+    keyToValue_[key] = value;
+  }
+
+  bool JObject::Childs::Remove(const stdstr& key) {
+    auto iter = keyToValue_.find(key);
+    if (iter != keyToValue_.end()) {
+      delete iter->second;
+      keyToValue_.erase(iter);
+      return true;
+    }
+    return false;
+  }
+
+  //============
+  JObject* JObject::Parse(std::string& s) {
+    JObject* object = new JObject();
+    bool result = object->InitValue(s.begin(), s.end());
+    if (!result) {
+      delete object;
+      object = nullptr;
+    }
+    return object;
+  }
+  //Check
+  JObject* JObject::Get(std::string& s) {
+    auto iter = childs.find(s);
+    return iter != childs.end() ? iter->second : nullptr;
+  }
+  //Check
+  JObject::JObject() :
+    valueType(JsonValueType::ValueNull),
+    valueLL(0L),
+    valueDouble(0.0),
+    valueBool(false),
+    valueString(std::string()) {
+  }
+  //Check
+  JObject::~JObject() {
+    for (auto object : childs) {
+      delete object.second;
+    }
+  }
+  //Check
+  void JObject::SetInt(int64_t value) {
+    UnInitValue();
+    valueType = JsonValueType::ValueInt64;
+    valueLL = value;
+  }
+  //Check
+  void JObject::SetStr(stritr iter, stritr iterEnd) {
+    UnInitValue();
+    valueType = JsonValueType::ValueString;
+    valueString = std::string(iter, iterEnd);
+  }
+  //Check
+  //TO DO
+  bool JObject::SetInt(stritr iter, stritr iterEnd) {
+    int64_t value;
+    bool result = GetValue(iter, iterEnd, value);
+    if (result) SetInt(value);
+    return result;
+  }
+  //Check
+  //TO DO
+  bool JObject::GetValue(stritr iter, stritr iterEnd, int64_t& value) {
+    value = 0;
+    while (iter < iterEnd) {
+      value = value * 10 + *iter++ - '0';
+    }
+    return true;
+  }
+
+
+
+
+
+
+
+
+  //Check
   void JObject::UnInitValue() {
     switch (valueType) {
     case JeriJson::JsonValueType::ValueString:
@@ -200,23 +253,13 @@ namespace JeriJson {
     valueType = JsonValueType::ValueNull;
   }
 
-  bool JObject::InitValue(stritr iter, stritr iterEnd) {
-    if (!Trim(iter, iterEnd)) {
+  bool JObject::InitValue(StrItr iterBegin, StrItr iterEnd) {
+    if (!Trim(iterBegin, iterEnd)) {
       return false;
     }
 
-    char firstChar = *iter;
-    if (iter + 1 == iterEnd) {
-      if (IsNumber(firstChar)) {
-        SetInt((int64_t)firstChar - '0');
-        return true;
-      }
-      return false;
-    }
-
-    char lastChar = *(iterEnd - 1);
-    if (firstChar == '{') {
-      if (lastChar == '}') {
+    if (IsBraceLChar(*iterBegin)) {
+      if (IsBraceRChar(*(iterEnd - 1))) {
         return SplitKeyValues(iter + 1, iterEnd - 1);
       } else {
         return false;
@@ -240,25 +283,14 @@ namespace JeriJson {
     }
     return true;
   }
-
-  bool JObject::SplitKeyValues(stritr iterBegin, stritr iterEnd) {
-    enum class StatusType {
-      Default,
-      KeyHalf,
-      KeyOver,
-      KeyFinish,
-      ValueHalf,
-      ValueOver,
-      KvpSplit,
-    };
-    stritr iter = iterBegin;
-    auto type = StatusType::Default;
-    stritr keyBegin, keyEnd;
-    stritr valueBegin, valueEnd;
+  //Check
+  bool JObject::SplitKeyValues(StrItr iterBegin, StrItr iterEnd) {
+    StrItr iter = iterBegin;
+    StrItr keyBegin, keyEnd, valueBegin, valueEnd;
 
     while (true) {
       if (!FindNextKeyRange(iter, iterEnd, keyBegin, keyEnd)) return false;
-      if (!FindNextColon(iter, iterEnd)) return false;
+      //if (!FindNextColon(iter, iterEnd)) return false;
       if (!FindNextValueRange(iter, iterEnd, valueBegin, valueEnd)) return false;
 
       JObject* value = new JObject();
@@ -272,6 +304,6 @@ namespace JeriJson {
     }
   }
   //std::function<bool(char)> JObject::isQuotationFunc = [](char c)->bool { return c == '\"'; };
-  std::function<bool(char)> JObject::isQuotationFunc = JObject::IsQuotationChar;
-  std::function<bool(char)> JObject::isColonFunc = JObject::IsColonChar;
+  //std::function<bool(char)> JObject::isQuotationFunc = JObject::IsQuotationChar;
+  //std::function<bool(char)> JObject::isColonFunc = JObject::IsColonChar;
 }
