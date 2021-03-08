@@ -1,11 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include <string>
 #include <map>
 #include <functional>
 
 namespace JeriJson {
-  
+
   enum class JsonValueType {
     ValueNull,
     //ValueInt32,
@@ -19,7 +19,14 @@ namespace JeriJson {
   
   class JObject {
   public:
+    /// @brief translate string to JObject
+    /// @param s , the string
+    /// @return , the result
     static JObject* Parse(std::string& s);
+
+    /// @brief find element in json
+    /// @param s , element key
+    /// @return , element value , if not found, nullptr
     JObject* Get(std::string& s);
 
   private:
@@ -28,20 +35,40 @@ namespace JeriJson {
     template<typename K, typename V>
     using stdmap = typename std::map<K, V>;
 
+    class Childs {
+    public:
+      Childs() {
+
+      }
+    private:
+
+      stdmap<stdstr, JObject*> elements;
+
+    };
+
+    /// @brief Constructor, but Json is not initialized
     JObject();
+    ~JObject();
+    /// @brief Init Json {"key", "value"}
+    /// @param iter , string.begin()
+    /// @param iterEnd , string.end()
+    /// @return ,if init success
     bool InitValue(stritr iter, stritr iterEnd);
+
+    /// @brief 
     void UnInitValue();
     void SetInt(int64_t value);
     void SetStr(stritr iter, stritr iterEnd);
-    void SetInt(stritr iter, stritr iterEnd);
+    bool SetInt(stritr iter, stritr iterEnd);
     bool SplitKeyValues(stritr iter, stritr iterEnd);
     
     static bool TrimLeft(stritr& iterBegin, const stritr& iterEnd);
     static bool Trim(stritr& iter, stritr& iterEnd);
+    static bool Trim(stritr& iter, stritr& iterEnd, std::function<bool(char)>&& trimChar);
     static bool GetValue(stritr iter, stritr iterEnd, int64_t& value);
 
     static bool FindNextIterSkipSpace(stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind);
-    static bool FindNextIterSkipEscapesChar(stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind);
+    static bool FindNextIterSkipEscapesChar(const stritr& iter, const stritr& iterEnd, const std::function<bool(char)>& match, stritr& iterFind);
     static bool FindBraceOrBracketPair(const stritr& iterBegin, const stritr& iterEnd, stritr& iterFind);
     static void FindNumberEnd(const stritr& iterBegin, const stritr& iterEnd, stritr& iterFind);
 
