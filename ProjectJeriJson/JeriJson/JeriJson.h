@@ -35,17 +35,6 @@ namespace JeriJson {
     template<typename K, typename V>
     using stdmap = typename std::map<K, V>;
 
-    class Childs {
-    public:
-      Childs() {
-
-      }
-    private:
-
-      stdmap<stdstr, JObject*> elements;
-
-    };
-
     /// @brief Constructor, but Json is not initialized
     JObject();
     ~JObject();
