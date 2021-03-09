@@ -10,12 +10,13 @@ int main() {
   while (true) {
     string s;
     getline(cin, s);
-    //s = "{\"name\":\"value\"}";
+    s = "\"name\":{\"name\":\"value\"}";
 
     JeriJson::JObject* ptr = JeriJson::JObject::Parse(s);
     printf("ptr = %p\n", ptr);
     if (ptr != nullptr) {
       cout << ptr->ToJson() << endl;
+      cout << ptr->ToInt() << endl;
     }
 
   }

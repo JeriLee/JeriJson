@@ -241,14 +241,17 @@ namespace JeriJson {
   void VecPushBackIntDig(std::vector<char>& vec, int64_t x) {
     if (x == 0) return;
     VecPushBackIntDig(vec, x / 10);
-    vec.push_back(x % 10);
+    vec.push_back(x % 10 + 48);
   }
 
   void VecPushBackInt(std::vector<char>& vec, int64_t x) {
     if (x == 0) vec.push_back(0);
     else {
-      if (x < 0) vec.push_back('-');
-      VecPushBackIntDig(vec, x / 10);
+      if (x < 0) {
+        vec.push_back('-');
+        x = -x;
+      }
+      VecPushBackIntDig(vec, x);
     }
   }
 
