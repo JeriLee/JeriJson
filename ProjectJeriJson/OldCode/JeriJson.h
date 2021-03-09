@@ -3,7 +3,6 @@
 #include <string>
 #include <map>
 #include <functional>
-#include <vector>
 
 namespace JeriJson {
 
@@ -25,26 +24,12 @@ namespace JeriJson {
     /// @brief translate string to JObject
     /// @param s , this is a 
     /// @return , the result
-    static JObject* Parse(const std::string& fromStr);
+    static JObject* Parse(std::string& s);
 
     /// @brief find element in JObject
     /// @param s , element key
     /// @return , element value , if not found, nullptr
-    JObject* Get(const std::string& s);
-
-    int64_t ToInt() {
-      return valueLL;
-    }
-
-    std::string ToString() {
-      return valueString;
-    }
-
-    std::string ToJson();
-
-    JsonValueType Type() {
-      return valueType;
-    }
+    JObject* Get(std::string& s);
 
     using Str = typename std::string;
     using StrItr = typename Str::iterator;
@@ -62,17 +47,12 @@ namespace JeriJson {
       void Add(const Str& key, JObject* value);
       bool Remove(const Str& key);
       void Clear();
-      JObject* Find(const Str& key){ 
-        auto iter = elements_.find(key);
-        return iter == elements_.end() ? nullptr : iter->second;
-      }
-
-      void InterToJson(std::vector<char>& vec);
     };
 
 
     /// @brief Constructor, but JObject is not initialized
     JObject();
+    ~JObject();
     /// @brief Init Json {"key", "value"}
     /// @param iter , string.begin()
     /// @param iterEnd , string.end()
@@ -81,13 +61,12 @@ namespace JeriJson {
 
     /// @brief 
     void UnInitValue();
-    void SetInt(int64_t);
-    bool SetInt(const StrItr&, const StrItr&);
-    void SetStr(const StrItr&, const StrItr&);
-    bool SplitKeyValues(StrItr, StrItr);
-
-    void InterToJson(std::vector<char>& vec);
-
+    void SetInt(int64_t value);
+    void SetStr(StrItr iter, StrItr iterEnd);
+    bool SetInt(StrItr iter, StrItr iterEnd);
+    bool SplitKeyValues(StrItr iter, StrItr iterEnd);
+    
+    static bool GetValue(StrItr iter, StrItr iterEnd, int64_t& value);
 
   private:
     JsonValueType valueType;

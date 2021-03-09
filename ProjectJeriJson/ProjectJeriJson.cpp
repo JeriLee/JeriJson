@@ -7,16 +7,18 @@
 using namespace std;
 
 int main() {
-  char c1 = ':';
-  char c2 = '\:';
-  printf("char = %d %d\n", c1, c2);
-  string str = "this is a stringaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbba";
-  printf("size is %d\n", (int)(sizeof(str)));
-  printf("size is %d\n", (int)str.length() + 1);
+  while (true) {
+    string s;
+    getline(cin, s);
+    //s = "{\"name\":\"value\"}";
 
-  JeriJson::JObject* ptr = JeriJson::JObject::Parse(str);
-  printf("ptr = %p\n", ptr);
-  cout << "Hello CMake." << endl;
+    JeriJson::JObject* ptr = JeriJson::JObject::Parse(s);
+    printf("ptr = %p\n", ptr);
+    if (ptr != nullptr) {
+      cout << ptr->ToJson() << endl;
+    }
+
+  }
   return 0;
 }
 
